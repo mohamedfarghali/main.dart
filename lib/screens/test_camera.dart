@@ -1,105 +1,100 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:tflite/tflite.dart';
 
-class TfliteModel extends StatefulWidget {
-  const TfliteModel({Key? key}) : super(key: key);
+class CameraScreenTest extends StatefulWidget{
+  const CameraScreenTest({Key? key}) : super(key: key);
 
   @override
-  _TfliteModelState createState() => _TfliteModelState();
+  State createState() {
+    return CameraWidgetState();
+  }
+
 }
 
-class _TfliteModelState extends State<TfliteModel> {
-
-  late File _image;
-  late List _results;
-  bool imageSelect=false;
-  @override
-  void initState()
+class CameraWidgetState extends State{
+  PickedFile? imageFile=null;
+  Future<void>_showChoiceDialog(BuildContext context)
   {
-    super.initState();
-    loadModel();
-  }
-  Future loadModel()
-  async {
-    Tflite.close();
-    String res;
-    res=(await Tflite.loadModel(model: "assets/model_Lite.tflite"))!;
-      if (kDebugMode) {
-        print("Models loading status: $res");
-      }
-  }
+    return showDialog(context: context,builder: (BuildContext context){
 
-  Future imageClassification(File image)
-  async {
-    final List? recognitions = await Tflite.runModelOnImage(
-      path: image.path,
-      numResults: 6,
-      threshold: 0.05,
-      imageMean: 127.5,
-      imageStd: 127.5,
-    );
-    setState(() {
-      _results=recognitions!;
-      _image=image;
-      imageSelect=true;
+      return AlertDialog(
+        title: const Text("Choose option",style: TextStyle(color: Colors.green),),
+        content: SingleChildScrollView(
+          child: ListBody(
+            children: [
+              const Divider(height: 1,color: Colors.blue,),
+              ListTile(
+                onTap: (){
+                  _openGallery(context);
+                },
+                title: const Text("Gallery"),
+                leading: const Icon(Icons.account_box,color: Colors.green,),
+              ),
+
+              const Divider(height: 1,color: Colors.green,),
+              ListTile(
+                onTap: (){
+                  _openCamera(context);
+                },
+                title: const Text("Camera"),
+                leading: const Icon(Icons.camera,color: Colors.green,),
+              ),
+            ],
+          ),
+        ),);
     });
   }
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    // TODO: implement build
+    return  Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.green,
         title: const Text("Camera"),
-      ),
-      body: ListView(
-        children: [
-          (imageSelect)?Container(
-            margin: const EdgeInsets.all(10),
-            child: Image.file(_image),
-          ):Container(
-            margin: const EdgeInsets.all(10),
-            child: const Opacity(
-              opacity: 0.8,
-              child: Center(
-                child: Text("No image selected"),
-              ),
-            ),
-          ),
-          SingleChildScrollView(
-            child: Column(
-              children: (imageSelect)?_results.map((result) {
-                return Card(
-                  child: Container(
-                    margin: const EdgeInsets.all(10),
-                    child: Text(
-                      "${result['label']} - ${result['confidence'].toStringAsFixed(2)}",
-                      style: const TextStyle(color: Colors.red,
-                          fontSize: 20),
-                    ),
-                  ),
-                );
-              }).toList():[],
-            ),
-          )
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.green,
-        onPressed: pickImage,
-        child: const Icon(Icons.image),
+      ),
+      body: Center(
+        child: Container(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Card(
+                child:( imageFile==null)?const Text("No Image Selected"): Image.file( File(  imageFile!.path)),
+              ),
+              MaterialButton(
+                textColor: Colors.white,
+                color: Colors.green,
+                onPressed: (){
+                  _showChoiceDialog(context);
+                },
+                child: const Text("Select Image"),
+
+              )
+            ],
+          ),
+        ),
       ),
     );
   }
-  Future pickImage()
-  async {
-    final ImagePicker _picker = ImagePicker();
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
+
+  void _openGallery(BuildContext context) async{
+    final pickedFile = await ImagePicker().getImage(
+      source: ImageSource.gallery ,
     );
-    File image = File(pickedFile!.path);
-    imageClassification(image);
+    setState(() {
+      imageFile = pickedFile!;
+    });
+
+    Navigator.pop(context);
+  }
+
+  void _openCamera(BuildContext context)  async{
+    final pickedFile = await ImagePicker().getImage(
+      source: ImageSource.camera ,
+    );
+    setState(() {
+      imageFile = pickedFile!;
+    });
+    Navigator.pop(context);
   }
 }

@@ -166,7 +166,7 @@ class HomePage extends StatelessWidget {
                                             context,
                                             MaterialPageRoute(
                                               builder: (context) =>
-                                                  const TfliteModel(),
+                                                  const CameraScreenTest(),
                                             ),
                                           );
                                         },

@@ -30,7 +30,6 @@ dependencies:
   dio: ^4.0.4
   intl: ^0.17.0
   gallery_saver: ^2.3.2
-  tflite: ^1.1.2
   #hhhhhhh
 
 
